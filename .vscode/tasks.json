@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Copy to CIRCUITPY",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "xcopy \"${workspaceFolder}\\*.py\" E:\\ /Y & xcopy \"${workspaceFolder}\\lib\" E:\\lib /E /I /Y"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
