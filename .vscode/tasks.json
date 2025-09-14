@@ -4,14 +4,24 @@
     {
       "label": "Copy to CIRCUITPY",
       "type": "shell",
+      "command": "xcopy",
+      "args": ["${workspaceFolder}\\*.py", "E:\\", "/Y"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Copy to CIRCUITPY (with libraries)",
+      "type": "shell",
       "command": "cmd",
       "args": [
         "/c",
         "xcopy \"${workspaceFolder}\\*.py\" E:\\ /Y & xcopy \"${workspaceFolder}\\lib\" E:\\lib /E /I /Y"
-      ],
+      ],      
       "group": {
         "kind": "build",
-        "isDefault": true
+        "isDefault": false
       }
     }
   ]
