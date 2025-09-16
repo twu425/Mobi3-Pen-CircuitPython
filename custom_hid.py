@@ -56,10 +56,14 @@ class CustomHid:
         self.arm2_rotation_offset = 0
         self.turntable_rotation_offset = 0
 
+        self.arm1_rotation_offset = math.radians(360-286) # Arm 1
+        self.arm2_rotation_offset = math.radians(360-111) # Arm 2
+        self.turntable_rotation_offset = math.radians(360-0) # Turntable
+
     def get_rotations(self):
-        arm1_raw_rotation = ((self.rotation_sensor_1.angle / 4096) * 2 * math.pi + math.radians(self.arm1_rotation_offset)) % (2 * math.pi)
-        arm2_raw_rotation = ((self.rotation_sensor_2.angle / 4096) * 2 * math.pi + math.radians(self.arm2_rotation_offset)) % (2 * math.pi)
-        arm3_raw_rotation = ((self.rotation_sensor_3.angle / 4096) * 2 * math.pi + math.radians(self.turntable_rotation_offset)) % (2 * math.pi)
+        arm1_raw_rotation = ((self.rotation_sensor_1.angle / 4096) * 2 * math.pi + self.arm1_rotation_offset) % (2 * math.pi)
+        arm2_raw_rotation = ((self.rotation_sensor_2.angle / 4096) * 2 * math.pi + self.arm2_rotation_offset) % (2 * math.pi)
+        arm3_raw_rotation = ((self.rotation_sensor_3.angle / 4096) * 2 * math.pi + self.turntable_rotation_offset) % (2 * math.pi)
         
         arm1_rotation = self.arm1_rotation_moving_average.add(arm1_raw_rotation)
         arm2_rotation = self.arm2_rotation_moving_average.add(arm2_raw_rotation)
