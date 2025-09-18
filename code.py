@@ -9,8 +9,7 @@ import math
 import digitalio
 from adafruit_hid.mouse import Mouse
 from moving_average import MovingAverage
-from as5600 import AS5600
-import adafruit_as5600
+from adafruit_as5600 import AS5600
 
 print("Hello World!")
 
@@ -42,7 +41,6 @@ rotation2_sensor = AS5600(i2c3) # Arm 2 rotation sensor
 rotation3_sensor = AS5600(i2c1) # Turntable rotation sensor
 
 print("I am working")
-thingy = adafruit_as5600.AS5600(i2c1)
 
 # All measures are in millimeters
 arm1_length = 170
