@@ -83,6 +83,7 @@ device = CustomHid(mouse, custom,
                    arm1_length, arm2_length, base_offset, pen_offset,
                    rotation1_sensor, rotation2_sensor, rotation3_sensor,
                    button1, button2, button3)
-# while True:
-    # device.callibrate()
-    # device.update()
+while True:
+    device.callibrate()
+    device.update()
+    time.sleep(0.05)

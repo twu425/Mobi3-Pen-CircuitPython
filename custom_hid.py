@@ -15,7 +15,7 @@ class CustomHid:
 
         self.arm1_length = arm1_length
         self.arm2_length = arm2_length
-        self.base_offset = base_offset
+        self.base_offset = -(45+8+8+21)
         self.pen_offset = pen_offset
 
         self.rotation_sensor_1 = rotation_sensor_1
@@ -54,18 +54,14 @@ class CustomHid:
         self.move_y = 0
         self.move_z = 0
 
-        self.arm1_rotation_offset = 0
-        self.arm2_rotation_offset = 0
-        self.turntable_rotation_offset = 0
-
-        self.arm1_rotation_offset = math.radians(360-286) # Arm 1
-        self.arm2_rotation_offset = math.radians(360-111) # Arm 2
-        self.turntable_rotation_offset = math.radians(360-0) # Turntable
+        self.arm1_rotation_offset = 3.28
+        self.arm2_rotation_offset = 2.097
+        self.turntable_rotation_offset = 0.886
 
     def get_rotations(self):
-        arm1_raw_rotation = ((self.rotation_sensor_1.angle / 4096) * 2 * math.pi + self.arm1_rotation_offset) % (2 * math.pi)
-        arm2_raw_rotation = ((self.rotation_sensor_2.angle / 4096) * 2 * math.pi + self.arm2_rotation_offset) % (2 * math.pi)
-        turntable_raw_rotation = ((self.rotation_sensor_3.angle / 4096) * 2 * math.pi + self.turntable_rotation_offset) % (2 * math.pi)
+        arm1_raw_rotation = ((self.rotation_sensor_1.angle / 4096) * 2 * math.pi - self.arm1_rotation_offset) % (2 * math.pi)
+        arm2_raw_rotation = ((self.rotation_sensor_2.angle / 4096) * 2 * math.pi - self.arm2_rotation_offset) % (2 * math.pi)
+        turntable_raw_rotation = ((self.rotation_sensor_3.angle / 4096) * 2 * math.pi - self.turntable_rotation_offset) % (2 * math.pi)
         
         arm1_rotation = self.arm1_rotation_moving_average.add(arm1_raw_rotation)
         arm2_rotation = self.arm2_rotation_moving_average.add(arm2_raw_rotation)
@@ -90,31 +86,34 @@ class CustomHid:
         # rotation_3 = 0.86
         # print(int(rotation_1), int(rotation_2), int(rotation_3))
             
-        x1 = (math.sin(rotation_1) * self.arm1_length + self.base_offset)
-        y1 = 0 #-self.pen_offset
+        x1 = math.sin(rotation_1) * self.arm1_length
+        y1 = self.base_offset
         z1 = math.cos(rotation_1) * self.arm1_length
         # print(x1, y1, z1)
         
         x2 = x1 + math.sin(rotation_2 + rotation_1) * self.arm2_length
         y2 = y1 
-        z2 = (z1 + math.cos(rotation_2 + rotation_1) * self.arm2_length)
+        z2 = z1 + math.cos(rotation_2 + rotation_1) * self.arm2_length
         # print(x2, y2, z2)
         
         # Apply the turn_table rotation
         x3 = (x2 * math.cos(rotation_3)) - (y2 * math.sin(rotation_3))
         y3 = (x2 * math.sin(rotation_3)) + (y2 * math.cos(rotation_3))
         z3 = z2
+        
         print(rotation_1, rotation_2, rotation_3)
         print(x3, y3, z3)
+        # print(self.arm1_rotation_offset, self.arm2_rotation_offset, self.turntable_rotation_offset)
         # time.sleep(0.05)
         
-        return (x3, -z3, y3) # TODO: Why is the frame of reference different?
+        return (x3, y3, z3) # TODO: Why is the frame of reference different?
     
     def callibrate(self):
-        arm1_rotation, arm2_rotation, turntable_rotation = self.get_rotations()
-        self.arm1_rotation_offset = (2 * math.pi) - arm1_rotation
-        self.arm2_rotation_offset = (2 * math.pi) - arm2_rotation
-        self.turntable_rotation_offset = (2 * math.pi) - turntable_rotation
+        # arm1_rotation, arm2_rotation, turntable_rotation = self.get_rotations()
+        # self.arm1_rotation_offset = (2 * math.pi) - arm1_rotation
+        # self.arm2_rotation_offset = (2 * math.pi) - arm2_rotation
+        # self.turntable_rotation_offset = (2 * math.pi) - turntable_rotation
+        pass
         
     def update(self):
         # a, b, c = self.get_rotations()
