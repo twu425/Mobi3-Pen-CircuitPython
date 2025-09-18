@@ -1,11 +1,11 @@
 from moving_average import MovingAverage
 import math
-
+import time
 
 class CustomHid:
 
-    def __init__(self, mouse, custom_hid,
-                 arm1_length, arm2_length, 
+    def __init__(self, mouse, custom_hid, 
+                 arm1_length, arm2_length, base_offset, pen_offset,
                  rotation_sensor_1, rotation_sensor_2, rotation_sensor_3, 
                  button_1, button_2, button_3,
                  sensitivity = 10, mouse_smoothing_count = 3, threshold = 2,
@@ -15,6 +15,8 @@ class CustomHid:
 
         self.arm1_length = arm1_length
         self.arm2_length = arm2_length
+        self.base_offset = base_offset
+        self.pen_offset = pen_offset
 
         self.rotation_sensor_1 = rotation_sensor_1
         self.rotation_sensor_2 = rotation_sensor_2
@@ -63,14 +65,16 @@ class CustomHid:
     def get_rotations(self):
         arm1_raw_rotation = ((self.rotation_sensor_1.angle / 4096) * 2 * math.pi + self.arm1_rotation_offset) % (2 * math.pi)
         arm2_raw_rotation = ((self.rotation_sensor_2.angle / 4096) * 2 * math.pi + self.arm2_rotation_offset) % (2 * math.pi)
-        arm3_raw_rotation = ((self.rotation_sensor_3.angle / 4096) * 2 * math.pi + self.turntable_rotation_offset) % (2 * math.pi)
+        turntable_raw_rotation = ((self.rotation_sensor_3.angle / 4096) * 2 * math.pi + self.turntable_rotation_offset) % (2 * math.pi)
         
         arm1_rotation = self.arm1_rotation_moving_average.add(arm1_raw_rotation)
         arm2_rotation = self.arm2_rotation_moving_average.add(arm2_raw_rotation)
-        arm3_rotation = self.turntable_rotation_moving_average.add(arm3_raw_rotation)
+        turntable_rotation = self.turntable_rotation_moving_average.add(turntable_raw_rotation)
 
-        return arm1_rotation, arm2_rotation, arm3_rotation
-        
+        # print(arm1_rotation, arm2_rotation, turntable_rotation)
+
+        return arm1_rotation, arm2_rotation, turntable_rotation
+           
     def determine_pos(self):
         """
         :param l1: Length of arm 1 (mm)
@@ -81,25 +85,30 @@ class CustomHid:
         :return: A tuple containing the x, y, and z coordinates of the endpoint
         """
         rotation_1, rotation_2, rotation_3 = self.get_rotations()
+        # rotation_1 = 1.03
+        # rotation_2 = 1.48
+        # rotation_3 = 0.86
+        # print(int(rotation_1), int(rotation_2), int(rotation_3))
             
-        # Determine the position of the start of the first arm
-        x1 = (math.sin(rotation_1) * self.arm1_length) #+ offset
-        y1 = 0
+        x1 = (math.sin(rotation_1) * self.arm1_length + self.base_offset)
+        y1 = 0 #-self.pen_offset
         z1 = math.cos(rotation_1) * self.arm1_length
-        #print(x1, y1, z1)
+        # print(x1, y1, z1)
         
-        # Determine the position of the start of the second arm 
-        x2 = x1 + math.sin(rotation_2 + rotation_1) * self.arm1_length
+        x2 = x1 + math.sin(rotation_2 + rotation_1) * self.arm2_length
         y2 = y1 
-        z2 = z1 + math.cos(rotation_2 + rotation_1) * self.arm1_length
-        #print(x2, y2, z2)
+        z2 = (z1 + math.cos(rotation_2 + rotation_1) * self.arm2_length)
+        # print(x2, y2, z2)
         
-        # Determine the position of the pen-point
+        # Apply the turn_table rotation
         x3 = (x2 * math.cos(rotation_3)) - (y2 * math.sin(rotation_3))
-        y3 = (x2 * math.sin(rotation_3)) - (y2 * math.cos(rotation_3))
+        y3 = (x2 * math.sin(rotation_3)) + (y2 * math.cos(rotation_3))
         z3 = z2
+        print(rotation_1, rotation_2, rotation_3)
+        print(x3, y3, z3)
+        # time.sleep(0.05)
         
-        return (x3, y3, z3)
+        return (x3, -z3, y3) # TODO: Why is the frame of reference different?
     
     def callibrate(self):
         arm1_rotation, arm2_rotation, turntable_rotation = self.get_rotations()
@@ -108,7 +117,10 @@ class CustomHid:
         self.turntable_rotation_offset = (2 * math.pi) - turntable_rotation
         
     def update(self):
+        # a, b, c = self.get_rotations()
+        # print(determine_height(170, 205, a, b))
         x, y, z = self.determine_pos()
+        # print(x, y, z)
         self.accumulation_x += (x - self.previous_x) * self.sensitivity
         self.accumulation_y += (y - self.previous_y) * self.sensitivity
         self.accumulation_z += (z - self.previous_z) * self.sensitivity
@@ -123,12 +135,17 @@ class CustomHid:
         self.move_z = int(self.accumulation_z)
         
         # TODO: implement threshold to take into account total distance
-        if abs(self.accumulation_x) >= threshold or abs(self.accumulation_y) >= threshold:
-            self.move_x = int(self.accumulation_x)
-            self.move_y = int(self.accumulation_y)
-            self.mouse.move(self.move_x, self.move_y)
-            self.accumulation_x -= self.move_x
-            self.accumulation_y -= self.move_y
+        # if abs(self.accumulation_x) >= threshold or abs(self.accumulation_y) >= threshold:
+        self.move_x = int(self.accumulation_x)
+        self.move_y = int(self.accumulation_y)
+        self.move_z = int(self.accumulation_z)
+        
+        # z-movement goes unused
+        self.accumulation_x -= self.move_x
+        self.accumulation_y -= self.move_y
+        self.accumulation_z -= self.move_z
+
+        self.mouse.move(self.move_x, self.move_y)
         
         # Avoid spamming HID reports, as it slows down the microcontroller immensely 
         # if not m1_btn.value:  
@@ -148,18 +165,18 @@ class CustomHid:
 
 
 
-    # def determine_height(l1, l2, rotation_1, rotation_2):
-    #     """
-    #     :param l1: Length of arm 1
-    #     :param l2: Length of arm 2
-    #     :param rotation_1: Rotation of arm 1
-    #     :param rotation_2: Rotation of arm 2
-    #     :return: Z-position of the end point
-    #     """
-    #     rotation_1 = math.radians(rotation_1)
-    #     rotation_2 = math.radians(rotation_2)
+def determine_height(l1, l2, rotation_1, rotation_2):
+    """
+    :param l1: Length of arm 1
+    :param l2: Length of arm 2
+    :param rotation_1: Rotation of arm 1
+    :param rotation_2: Rotation of arm 2
+    :return: Z-position of the end point
+    """
+    rotation_1 = rotation_1
+    rotation_2 = rotation_2
 
 
-    #     z = (math.cos(rotation_1) * l1) + (math.cos(rotation_1 + rotation_2) * l2)
+    z = (math.cos(rotation_1) * l1) + (math.cos(rotation_1 + rotation_2) * l2)
 
-    #     return z
+    return z

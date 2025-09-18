@@ -10,6 +10,7 @@ import digitalio
 from adafruit_hid.mouse import Mouse
 from moving_average import MovingAverage
 from as5600 import AS5600
+import adafruit_as5600
 
 print("Hello World!")
 
@@ -40,20 +41,23 @@ rotation1_sensor = AS5600(i2c2) # Arm 1 rotation sensor
 rotation2_sensor = AS5600(i2c3) # Arm 2 rotation sensor
 rotation3_sensor = AS5600(i2c1) # Turntable rotation sensor
 
+print("I am working")
+thingy = adafruit_as5600.AS5600(i2c1)
 
 # All measures are in millimeters
 arm1_length = 170
 arm2_length = 205
-offset = 0
+base_offset = 45
+pen_offset = 12
 
 sensitivity = 10
 mouse_smoothing_count = 3 # Determines how many of the last N mouse coordinates to average out for smoother movement
 threshold = 2.0  # Ignore movements less than this
 
 # Offsets
-arm1_rotation_offset = 360-286 # Arm 1
-arm2_rotation_offset = 360-111 # Arm 2
-turntable_rotation_offset = 360-0 # Turntable
+arm1_rotation_offset = 360+323 # Arm 1
+arm2_rotation_offset = 360+189 # Arm 2
+turntable_rotation_offset = 360-11 # Turntable
 
 ##############
 ## Buttons
@@ -77,9 +81,10 @@ button3 = registerButton(button3_pin)
 ## Loop
 ##########
 from custom_hid import CustomHid
-device = CustomHid(mouse, custom, arm1_length, arm2_length, 
+device = CustomHid(mouse, custom, 
+                   arm1_length, arm2_length, base_offset, pen_offset,
                    rotation1_sensor, rotation2_sensor, rotation3_sensor,
                    button1, button2, button3)
-while True:
+# while True:
     # device.callibrate()
-    device.update()
+    # device.update()
