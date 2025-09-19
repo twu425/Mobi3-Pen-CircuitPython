@@ -1,6 +1,7 @@
 from moving_average import MovingAverage
 import math
 import time
+import struct
 
 class CustomHid:
 
@@ -8,7 +9,7 @@ class CustomHid:
                  arm1_length, arm2_length, base_offset, pen_offset,
                  rotation_sensor_1, rotation_sensor_2, rotation_sensor_3, 
                  button_1, button_2, button_3,
-                 sensitivity = 10, mouse_smoothing_count = 3, threshold = 2,
+                 sensitivity = 1, mouse_smoothing_count = 3, threshold = 2,
                  profile = 0):
         self.mouse = mouse
         self.custom_hid = custom_hid
@@ -144,9 +145,13 @@ class CustomHid:
         self.accumulation_y -= self.move_y
         self.accumulation_z -= self.move_z
 
-        self.mouse.move(self.move_x, self.move_y)
-        
-        # Avoid spamming HID reports, as it slows down the microcontroller immensely 
+        # self.mouse.move(self.move_x, self.move_y)
+        if not self.button_3.value:
+            self.send_report(self.move_x, self.move_y, self.move_z, 0)
+
+        else:
+            self.send_report(0,0,0,0)
+        # Avoid spamming HID reports, as it slows down the microcontroll5er immensely 
         # if not m1_btn.value:  
         #     self.mouse.press(Mouse.LEFT_BUTTON)
         # else:
@@ -162,7 +167,14 @@ class CustomHid:
         #     mouse.release(Mouse.RIGHT_BUTTON)    
 
 
-
+    # Function to send a report using our custom HID device
+    # TODO: Refactor custom HID device into it's own class
+    def send_report(self, x=0, y=0, z=0, buttons=0):
+        def clamp(val):
+            return max(-127, min(127, int(val)))
+        report = struct.pack('bbbB', clamp(x), clamp(y), clamp(z), buttons & 0xFF)
+        print(f"Report bytes: {report} | x: {clamp(x)}, y: {clamp(y)}, z: {clamp(z)}, buttons: {buttons & 0xFF}")
+        self.custom_hid.send_report(report)
 
 def determine_height(l1, l2, rotation_1, rotation_2):
     """
@@ -179,3 +191,4 @@ def determine_height(l1, l2, rotation_1, rotation_2):
     z = (math.cos(rotation_1) * l1) + (math.cos(rotation_1 + rotation_2) * l2)
 
     return z
+

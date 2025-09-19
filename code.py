@@ -17,18 +17,7 @@ print("Hello World!")
 custom = usb_hid.devices[-1] # The custom HID device is the last in the list from usb_hid.enable() in boot.py
 mouse = Mouse(usb_hid.devices)
 
-# Function to send a report using our custom HID device
-# TODO: Refactor custom HID device into it's own class
-def send_report(x=0, y=0, z=0, buttons=0):
-    # x and y must be signed bytes (-127 to 127)
-    x_byte = x & 0xFF
-    y_byte = y & 0xFF
-    z_byte = z & 0xFF
-    buttons_byte = buttons & 0xFF
-    # The report's report ID is added automatically by the library, so it should be omitted
-    report = bytes([x_byte, y_byte, z_byte, buttons_byte])
-    # print(report)
-    custom.send_report(report)
+
 
 # Setup 3 I2C busses to handle the three as5600 sensors. They must be on seperate busses as they all use the same slave address.
 # i2c1 corresponds to rotation_sensor_3 (the turntable one) and not arm1's rotation sensor. Sorry!
