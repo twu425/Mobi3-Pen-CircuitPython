@@ -29,50 +29,32 @@ rotation1_sensor = AS5600(i2c2) # Arm 1 rotation sensor
 rotation2_sensor = AS5600(i2c3) # Arm 2 rotation sensor
 rotation3_sensor = AS5600(i2c1) # Turntable rotation sensor
 
-print("I am working")
-
-# All measures are in millimeters
-arm1_length = 170
-arm2_length = 205
-base_offset = 45
-pen_offset = 12
-
-sensitivity = 10
-mouse_smoothing_count = 3 # Determines how many of the last N mouse coordinates to average out for smoother movement
-threshold = 2.0  # Ignore movements less than this
-
-# Offsets
-arm1_rotation_offset = 360+323 # Arm 1
-arm2_rotation_offset = 360+189 # Arm 2
-turntable_rotation_offset = 360-11 # Turntable
-
-##############
-## Buttons
-##############
-
-button1_pin = board.GP11
-button2_pin = board.GP12
-button3_pin = board.GP13
-
 def registerButton(button_pin):
     button = digitalio.DigitalInOut(button_pin)
     button.direction = digitalio.Direction.INPUT
     button.pull = digitalio.Pull.UP
     return button
 
-button1 = registerButton(button1_pin)
-button2 = registerButton(button2_pin)
-button3 = registerButton(button3_pin)
+button1 = registerButton(board.GP11)
+button2 = registerButton(board.GP12)
+button3 = registerButton(board.GP13)
 
 ##########
 ## Loop
 ##########
 from custom_hid import CustomHid
 device = CustomHid(mouse, custom, 
-                   arm1_length, arm2_length, base_offset, pen_offset,
                    rotation1_sensor, rotation2_sensor, rotation3_sensor,
                    button1, button2, button3)
+# device.callibrate()
+# device.callibrate()
+device.update()
+# device.callibrate()
+device.load_calibrations()
+
 while True:
-    device.callibrate()
+    # pass
+    # test_buttons()
     device.update()
-    time.sleep(0.05)
+    #device.callibrate()
+    # time.sleep(0.05)
