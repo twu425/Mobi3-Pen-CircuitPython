@@ -5,7 +5,7 @@ import struct
 from adafruit_hid.mouse import Mouse
 import json
 import microcontroller
-
+from kinematics import ArmKinematics
 
 class CustomHid:
 
@@ -74,36 +74,7 @@ class CustomHid:
         # print(math.degrees(arm1_rotation), math.degrees(arm2_rotation), math.degrees(turntable_rotation))
 
         return arm1_rotation, arm2_rotation, turntable_rotation
-           
-    def determine_pos(self):
-        rotation_1, rotation_2, rotation_3 = self.get_rotations()
-            
-        x1 = math.sin(rotation_1) * self.ARM1_LENGTH
-        y1 = self.BASE_OFFSET
-        z1 = math.cos(rotation_1) * self.ARM1_LENGTH
-        # print(x1, y1, z1)
-        
-        x2 = x1 + math.sin(rotation_2 + rotation_1) * self.ARM2_LENGTH
-        y2 = y1 
-        z2 = z1 + math.cos(rotation_2 + rotation_1) * self.ARM2_LENGTH
-        # print(x2, y2, z2)
-        
-        # Apply the turn_table rotation
-        x3 = (x2 * math.cos(rotation_3)) - (y2 * math.sin(rotation_3))
-        y3 = (x2 * math.sin(rotation_3)) + (y2 * math.cos(rotation_3))
-        z3 = z2
-
-        # x3 = x2*math.cos(rotation_3) + z2*math.sin(rotation_3)
-        # y3 = y2
-        # z3 = -x2*math.sin(rotation_3) + z2*math.cos(rotation_3)
-        # print(math.degrees(rotation_1), math.degrees(rotation_2), math.degrees(rotation_3))
-        # print(rotation_1, rotation_2, rotation_3)
-        # print(x3, y3, z3)
-        # print(self.arm1_rotation_offset, self.arm2_rotation_offset, self.turntable_rotation_offset)
-        # time.sleep(0.1)
-        
-        return (x3, y3, z3) # TODO: Why is the frame of reference different?
-    
+               
     def callibrate(self):
         arm1_rotation, arm2_rotation, turntable_rotation = self.get_rotations()
         self.arm1_rotation_offset = arm1_rotation
@@ -113,7 +84,7 @@ class CustomHid:
         print("Callibrations saved: ", self.arm1_rotation_offset, self.arm2_rotation_offset, self.turntable_rotation_offset)
         # pass
 
-    # Each offset is stored as a 4-byte float (single precision)
+    # Each offset is stored as a 4-byte float
     FORMAT = "fff"  # arm1, arm2, turntable
     def load_calibrations(self):
         size = struct.calcsize(self.FORMAT)
@@ -143,14 +114,12 @@ class CustomHid:
         print("Callibrations saved")
 
     def update(self):
-        # a, b, c = self.get_rotations()
-        # print(determine_height(170, 205, a, b))
-        x, y, z = self.determine_pos()
-        # print(x, y, z)
+        r1, r2, r3 = self.get_rotations()
+        x, y, z = ArmKinematics.determine_pos(r1, r2, r3, self.ARM1_LENGTH, self.ARM2_LENGTH, self.BASE_OFFSET)
+
         self.accumulation_x += (x - self.previous_x) * self.SENSITIVITY
         self.accumulation_y += (y - self.previous_y) * self.SENSITIVITY
         self.accumulation_z += (z - self.previous_z) * self.SENSITIVITY
-        threshold = 0
 
         self.previous_x = x
         self.previous_y = y
@@ -166,9 +135,7 @@ class CustomHid:
         self.accumulation_y -= move_y
         self.accumulation_z -= move_z
 
-        r1, r2, r3 = self.get_rotations()
-
-        self.profile = 1
+        self.profile = 0
         if self.profile == 0:
             self.send_mouse_report(move_x, move_y, z)
         if self.profile == 1:
@@ -211,9 +178,9 @@ class CustomHid:
         Pack a 16-byte HID report:
         Byte 0: delta X (-127..127)
         Byte 1: delta Y (-127..127)
-        Byte 2: delta Z / wheel (-127..127)
+        Byte 2: delta Z (-127..127)
         Byte 3: buttons (8 bits)
-        Bytes 4-7: float X (IEEE-754)
+        Bytes 4-7: float X 
         Bytes 8-11: float Y
         Bytes 12-15: float Z
         """

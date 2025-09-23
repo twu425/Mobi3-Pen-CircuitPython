@@ -6,12 +6,23 @@ class ArmKinematics:
         self.arm2_len = arm2_len
         self.base_offset = base_offset
 
-    def calculate_position(self, r1, r2, r3):
-        x1 = math.sin(r1) * self.arm1_len
-        y1 = self.base_offset
-        z1 = math.cos(r1) * self.arm1_len
-        x2 = x1 + math.sin(r1 + r2) * self.arm2_len
-        z2 = z1 + math.cos(r1 + r2) * self.arm2_len
-        x3 = x2 * math.cos(r3) - y1 * math.sin(r3)
-        y3 = x2 * math.sin(r3) + y1 * math.cos(r3)
-        return x3, y3, z2
+    def determine_pos(rotation1, rotation2, rotation3, arm1_length, arm2_length, base_offset):
+            
+        x1 = math.sin(rotation1) * arm1_length
+        y1 = base_offset
+        z1 = math.cos(rotation1) * arm1_length
+        # print(x1, y1, z1)
+        
+        x2 = x1 + math.sin(rotation2 + rotation1) * arm2_length
+        y2 = y1 
+        z2 = z1 + math.cos(rotation2 + rotation1) * arm2_length
+        # print(x2, y2, z2)
+        
+        # Apply the turn_table rotation
+        x3 = (x2 * math.cos(rotation3)) - (y2 * math.sin(rotation3))
+        y3 = (x2 * math.sin(rotation3)) + (y2 * math.cos(rotation3))
+        z3 = z2
+        # print(x3, y3, z3)
+        # print(self.arm1_rotation_offset, self.arm2_rotation_offset, self.turntable_rotation_offset)
+        
+        return (x3, y3, z3) 
