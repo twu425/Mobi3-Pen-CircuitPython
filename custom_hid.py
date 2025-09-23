@@ -47,6 +47,10 @@ class CustomHid:
         self.previous_y = 0
         self.previous_z = 0
 
+        self.move_x = 0
+        self.move_y = 0
+        self.move_z = 0
+
         # Accumulation
         # TODO: Explain this
         self.accumulation_x = 0

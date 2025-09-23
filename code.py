@@ -52,9 +52,20 @@ device.update()
 # device.callibrate()
 device.load_calibrations()
 
+
+
+last_time = time.monotonic()
+
+
 while True:
-    # pass
-    # test_buttons()
+    
+    current_time = time.monotonic()
+    dt = current_time - last_time
+    last_time = current_time
+    if dt > 0:
+        hz = 1 / dt
+        print(f"{hz:.2f} Hz")
+    
     device.update()
     #device.callibrate()
     # time.sleep(0.05)
