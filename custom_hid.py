@@ -6,6 +6,7 @@ from adafruit_hid.mouse import Mouse
 import json
 import microcontroller
 
+
 class CustomHid:
 
     SENSITIVITY = 10 
@@ -96,8 +97,8 @@ class CustomHid:
         # y3 = y2
         # z3 = -x2*math.sin(rotation_3) + z2*math.cos(rotation_3)
         # print(math.degrees(rotation_1), math.degrees(rotation_2), math.degrees(rotation_3))
-        print(rotation_1, rotation_2, rotation_3)
-        print(x3, y3, z3)
+        # print(rotation_1, rotation_2, rotation_3)
+        # print(x3, y3, z3)
         # print(self.arm1_rotation_offset, self.arm2_rotation_offset, self.turntable_rotation_offset)
         # time.sleep(0.1)
         
@@ -165,11 +166,13 @@ class CustomHid:
         self.accumulation_y -= move_y
         self.accumulation_z -= move_z
 
+        r1, r2, r3 = self.get_rotations()
+
         self.profile = 1
         if self.profile == 0:
             self.send_mouse_report(move_x, move_y, z)
         if self.profile == 1:
-            self.send_custom_hid_report(self.move_x, self.move_y, self.move_z, 0)
+            self.send_custom_hid_report(self.move_x, self.move_y, self.move_z, 0, r1, r2, r3)
 
 
     def send_mouse_report(self, move_x, move_y, z_pos):
@@ -202,10 +205,29 @@ class CustomHid:
             self.last_buttons = buttons
 
     # Function to send a report using our custom HID device
-    def send_custom_hid_report(self, x=0, y=0, z=0, buttons=0):
+
+    def send_custom_hid_report(self, dx=0, dy=0, dz=0, buttons=0, fx=0.0, fy=0.0, fz=0.0):
+        """
+        Pack a 16-byte HID report:
+        Byte 0: delta X (-127..127)
+        Byte 1: delta Y (-127..127)
+        Byte 2: delta Z / wheel (-127..127)
+        Byte 3: buttons (8 bits)
+        Bytes 4-7: float X (IEEE-754)
+        Bytes 8-11: float Y
+        Bytes 12-15: float Z
+        """
+        
+        # Helper to clamp deltas to -127..127
         def clamp(val):
             return max(-127, min(127, int(val)))
-        report = struct.pack('bbbB', clamp(x), clamp(y), clamp(z), buttons & 0xFF)
-        # print(f"Report bytes: {report} | x: {clamp(x)}, y: {clamp(y)}, z: {clamp(z)}, buttons: {buttons & 0xFF}")
+        
+        report = struct.pack(
+            '<bbbBfff',   # Little-endian: 3x int8, 1x uint8, 3x float32
+            clamp(dx), clamp(dy), clamp(dz), buttons & 0xFF,
+            float(fx), float(fy), float(fz)
+        )
+
+        # Send to HID device
         self.custom_hid.send_report(report)
 

@@ -41,6 +41,17 @@ CUSTOM_HID_DESCRIPTOR = bytes((
     0x95, 0x08,         #   Report Count (8 bits -> 1 byte)
     0x81, 0x02,         #   Input (Data,Var,Abs)
 
+
+    # 3 floats (x_f, y_f, z_f) - each float is 32 bits (4 bytes)
+    0x09, 0x40,         # Usage (Vendor-defined float X)
+    0x09, 0x41,         # Usage (Vendor-defined float Y)
+    0x09, 0x42,         # Usage (Vendor-defined float Z)
+    0x15, 0x00,         # Logical Minimum (0) - floats are handled by host
+    0x26, 0xFF, 0xFF,   # Logical Maximum (65535) - placeholder for float scaling
+    0x75, 0x20,         # Report Size 32 bits
+    0x95, 0x03,         # Report Count 3
+    0x81, 0x02,         # Input (Data,Var,Abs)
+
     0xC0                # End Collection
 ))
 
@@ -48,7 +59,7 @@ custom_hid = usb_hid.Device(
     report_descriptor=CUSTOM_HID_DESCRIPTOR,
     usage_page=0xFF00,    # Vendor-defined page
     usage=0x01,
-    in_report_lengths=(4,),   # X, Y, Wheel, Buttons -> 4 bytes
+    in_report_lengths=(16,),   # X, Y, Wheel, Buttons -> 4 bytes
     out_report_lengths=(0,),
     report_ids=(4,), 
 )

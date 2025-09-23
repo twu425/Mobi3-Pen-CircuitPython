@@ -58,7 +58,7 @@ last_time = time.monotonic()
 
 
 while True:
-    
+
     current_time = time.monotonic()
     dt = current_time - last_time
     last_time = current_time
