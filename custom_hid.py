@@ -161,7 +161,7 @@ class CustomHid:
         self.accumulation_y -= move_y
         self.accumulation_z -= move_z
 
-        # self.profile = 2
+        self.profile = 1
         if self.profile == 0:
             self.send_mouse_report(move_x, move_y, z)
         if self.profile == 1:
