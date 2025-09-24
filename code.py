@@ -17,8 +17,6 @@ print("Hello World!")
 custom = usb_hid.devices[-1] # The custom HID device is the last in the list from usb_hid.enable() in boot.py
 mouse = Mouse(usb_hid.devices)
 
-
-
 # Setup 3 I2C busses to handle the three as5600 sensors. They must be on seperate busses as they all use the same slave address.
 # i2c1 corresponds to rotation_sensor_3 (the turntable one) and not arm1's rotation sensor. Sorry!
 i2c1 = busio.I2C(scl=board.GP1, sda=board.GP0, frequency=100000)
@@ -46,26 +44,20 @@ from custom_hid import CustomHid
 device = CustomHid(mouse, custom, 
                    rotation1_sensor, rotation2_sensor, rotation3_sensor,
                    button1, button2, button3)
-# device.callibrate()
-# device.callibrate()
+
 device.update()
-# device.callibrate()
 device.load_calibrations()
 
-
-
-last_time = time.monotonic()
-
+# last_time = time.monotonic()
 
 while True:
 
-    current_time = time.monotonic()
-    dt = current_time - last_time
-    last_time = current_time
-    if dt > 0:
-        hz = 1 / dt
-        print(f"{hz:.2f} Hz")
+    # current_time = time.monotonic()
+    # dt = current_time - last_time
+    # last_time = current_time
+    # if dt > 0:
+    #     hz = 1 / dt
+    #     print(f"{hz:.2f} Hz")
     
     device.update()
-    #device.callibrate()
     # time.sleep(0.05)

@@ -3,7 +3,6 @@ import math
 import time
 import struct
 from adafruit_hid.mouse import Mouse
-import json
 import microcontroller
 from kinematics import ArmKinematics
 
@@ -11,7 +10,7 @@ class CustomHid:
 
     SENSITIVITY = 10 
     MOUSE_SMOOTHING = 3 # The last N position captures to average out for a smoother result
-    THRESHOLD = 2 # The minimum amount of movement required for movement to be reported
+    THRESHOLD = 2 # The minimum amount of movement required for movement to be reported (unused)
     
     ARM1_LENGTH = 170 # The length of arm 1 (the shorter one) in mm
     ARM2_LENGTH = 205 # The length of arm 2 (the longer one) in mm
@@ -135,16 +134,16 @@ class CustomHid:
         self.accumulation_y -= move_y
         self.accumulation_z -= move_z
 
-        self.profile = 0
-        if self.profile == 0:
-            self.send_mouse_report(move_x, move_y, z)
+        self.profile = 1
+        # if self.profile == 0:
+        # self.send_mouse_report(move_x, move_y, z)
         if self.profile == 1:
             self.send_custom_hid_report(self.move_x, self.move_y, self.move_z, 0, r1, r2, r3)
 
 
     def send_mouse_report(self, move_x, move_y, z_pos):
         # Only move if non-zero
-        print(z_pos)
+        # print(z_pos)
         if (move_x or move_y) and z_pos < -160:
             self.mouse.move(move_x, move_y)
 
@@ -194,7 +193,7 @@ class CustomHid:
             clamp(dx), clamp(dy), clamp(dz), buttons & 0xFF,
             float(fx), float(fy), float(fz)
         )
-
+        print("sending report", report)
         # Send to HID device
         self.custom_hid.send_report(report)
 

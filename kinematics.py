@@ -1,10 +1,6 @@
 import math
 
 class ArmKinematics:
-    def __init__(self, arm1_len, arm2_len, base_offset):
-        self.arm1_len = arm1_len
-        self.arm2_len = arm2_len
-        self.base_offset = base_offset
 
     def determine_pos(rotation1, rotation2, rotation3, arm1_length, arm2_length, base_offset):
             

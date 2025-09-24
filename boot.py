@@ -1,5 +1,8 @@
 import usb_hid
+import supervisor
+import usb.core
 
+# usb_hid.disable()
 
 CUSTOM_HID_DESCRIPTOR = bytes((
     0x06, 0x00, 0xFF,   #   Usage Page (Vendor Defined 0xFF00)
@@ -64,13 +67,19 @@ custom_hid = usb_hid.Device(
     report_ids=(4,), 
 )
 
+supervisor.set_usb_identification(
+    manufacturer="Twu425",
+    product="My Thingy",
+    vid=0x239A,   # Adafruit's vendor ID
+    pid=0x6969    # A "random" product ID I made
+)
+
 # Note to self: if enabling the other devices, make sure to create its respective HID object in code.py or the reports will fail
 usb_hid.enable(
-    (
-    #  usb_hid.Device.KEYBOARD,
+    (#  usb_hid.Device.KEYBOARD,
      usb_hid.Device.MOUSE,
     #  usb_hid.Device.CONSUMER_CONTROL,
-     custom_hid,)
+     custom_hid,),     
 )
 
 # # Gamepad report descriptor from adafruit for reference on how to setup HID devices (https://learn.adafruit.com/custom-hid-devices-in-circuitpython/report-descriptors)
