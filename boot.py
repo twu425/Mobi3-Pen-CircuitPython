@@ -67,12 +67,12 @@ custom_hid = usb_hid.Device(
     report_ids=(4,), 
 )
 
-supervisor.set_usb_identification(
-    manufacturer="Twu425",
-    product="My Thingy",
-    vid=0x239A,   # Adafruit's vendor ID
-    pid=0x6969    # A "random" product ID I made
-)
+# supervisor.set_usb_identification(
+#     manufacturer="Twu425",
+#     product="My Thingy",
+#     vid=0x239A,   # Adafruit's vendor ID
+#     pid=0x80F4    # A "random" product ID I made
+# )
 
 # Note to self: if enabling the other devices, make sure to create its respective HID object in code.py or the reports will fail
 usb_hid.enable(

@@ -115,6 +115,7 @@ class CustomHid:
     def update(self):
         r1, r2, r3 = self.get_rotations()
         x, y, z = ArmKinematics.determine_pos(r1, r2, r3, self.ARM1_LENGTH, self.ARM2_LENGTH, self.BASE_OFFSET)
+        print(x, y, z)
 
         self.accumulation_x += (x - self.previous_x) * self.SENSITIVITY
         self.accumulation_y += (y - self.previous_y) * self.SENSITIVITY
@@ -129,16 +130,17 @@ class CustomHid:
         move_x = int(self.accumulation_x)
         move_y = int(self.accumulation_y)
         move_z = int(self.accumulation_z)
+        # print(move_x, move_y, move_z)
         
         self.accumulation_x -= move_x
         self.accumulation_y -= move_y
         self.accumulation_z -= move_z
 
         self.profile = 1
-        # if self.profile == 0:
-        # self.send_mouse_report(move_x, move_y, z)
+        if self.profile == 0:
+            self.send_mouse_report(move_x, move_y, z)
         if self.profile == 1:
-            self.send_custom_hid_report(self.move_x, self.move_y, self.move_z, 0, r1, r2, r3)
+            self.send_custom_hid_report(move_x, move_y, move_z, 0, r1, r2, r3)
 
 
     def send_mouse_report(self, move_x, move_y, z_pos):
@@ -193,7 +195,8 @@ class CustomHid:
             clamp(dx), clamp(dy), clamp(dz), buttons & 0xFF,
             float(fx), float(fy), float(fz)
         )
-        print("sending report", report)
+        # print("sending report", report)
         # Send to HID device
         self.custom_hid.send_report(report)
 
+5
